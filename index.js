@@ -1,47 +1,87 @@
 const axios = require("axios")
 const express = require("express")
-const  http = require('http');
-
+const {API , ACESS} = require("./credential")
 const app = express();
-  
-// http.createServer(function (req, res) {
-//     res.writeHead(200, { 'Content-Type': 'text/html' });
-  
-//     // req.url stores the path in the url
-//     var url = req.url;
-//     if (url === "/") {
-        
-//     }
-    
-  
-// })
-
-app.get("/" , (req,res) => {
-    // res.send("Potty");
-    axios.get(`http://api.mediastack.com/v1/news?access_key=58c8ce96564a31ebb6e07ae5bb0f87fa&limit=20`)
-        .then((data) => {
-        //   setToday({...data.data});
-        // res.writeHead(200, { 'Content-Type': 'text/plain' });
-                res.send(data.data.data)
-        // console.log(data.data.data);
+app.use(function(req, res, next) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        res.setHeader('Access-Control-Allow-Credentials', true);
+        next();
+    });
+app.get("/topHeadlines" , (req,res) => {
+        // `http://api.mediastack.com/v1/news?access_key=${ACESS}&limit=5`
+    axios.get(`https://newsapi.org/v2/top-headlines?country=in&pageSize=5&apiKey=${API}`)
+        .then(({data}) => {
+                res.send(data.articles)
         })
         .catch((err) => {
-        // res.write("something went wrong");
-        res.send("Hello fucker" + err)
+                console.log(err)
+        res.send(err)
         })
 })
 
-app.get("/news" , (req,res) => {
-    axios.get(`https://newsdata.io/api/1/news?apikey=pub_65467390a18e52bd65f9f93a66f79968808e&language=en`)
-        .then((data) => {
-        //   setToday({...data.data});
-        // res.writeHead(200, { 'Content-Type': 'text/plain' });
-                res.send(data.data)
-        // console.log(data.data.data);
+app.get("/past" , (req,res) => {
+    const {from  , to , size , Countryname} = req.query;
+    axios.get(`https://newsapi.org/v2/everything?q=${Countryname}&pageSize=${size}&from=${from}&to=${to}&sortBy=popularity&apiKey=${API}`)
+        .then(({data}) => {
+                res.send(data.articles)
         })
         .catch((err) => {
-        // res.write("something went wrong");
-        res.send("Hello fucker" + err)
+        
+                console.log(err)
+        res.send(err)
+        })
+})
+app.get("/country" , (req,res) => {
+    const { country } = req.query;
+    axios.get(`https://newsapi.org/v2/top-headlines?country=${country || "in"}&pageSize=5&apiKey=${API}`)
+        .then(({data}) => {
+                res.send(data.articles)
+        })
+        .catch((err) => {
+        
+                console.log(err)
+        res.send(err)
+        })
+})
+app.get("/discover" , (req,res) => {
+    const { country , lang , category } = req.query;
+    axios.get(`http://api.mediastack.com/v1/news?access_key=${ACESS}&limit=20&countries=${country}&languages=${lang.join(",")}&categories=${category.join(",")}`)
+        .then(({data}) => {
+                // console.log(data)
+                res.send(data.data)
+        })
+        .catch((err) => {
+        
+                console.log(err)
+        res.send(err)
+        })
+})
+app.get("/query" , (req,res) => {
+    const { searchQuery , page } = req.query;
+    axios.get(`https://newsapi.org/v2/everything?q=${searchQuery.toLowerCase()}&limit=10&page=${page}&sortBy=popularity&apiKey=${API}`)
+        .then(({data}) => {
+                // console.log(page)
+                res.send(data.articles)
+        })
+        .catch((err) => {
+        
+                // console.log(err)
+        res.send(err)
+        })
+})
+app.get("/source" , (req,res) => {
+        const { country , size } = req.query;
+        axios.get(`https://newsapi.org/v2/sources?country=${country || "in"}&pageSize=${size}&apiKey=${API}`)
+        .then((data) => {
+                // console.log(data.data)
+                res.send(data.data.sources)
+        })
+        .catch((err) => {
+        
+                console.log(err)
+        res.send(err)
         })
 })
 
